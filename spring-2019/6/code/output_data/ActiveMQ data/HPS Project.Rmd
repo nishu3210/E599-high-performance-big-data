@@ -1,0 +1,122 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+setwd("C:/Users/Nishant Jain/Documents/Spring 2019/HPBDS/Project/RabbitMQ Results/1 Car/")
+library(ggplot2)
+#library(data.table)
+d = list.dirs()
+d = d[2:6]
+f = list.files("Run1/")
+nc = c(1,8,33)
+
+#RabbitMQ
+rq_mean = list()
+rq_std = list()
+rq_err = list()
+rq_min = list()
+rq_max = list()
+
+for(j in 1:3)
+{
+  
+  car1m = read.csv(paste0(d[1],"/",f[j]),stringsAsFactors = F,header = F,skip = 10000)
+  for(i in 2:5)
+  { 
+    temp = read.csv(paste0(d[i],"/",f[j]),stringsAsFactors = F,header = F,skip = 10000)
+    car1m = rbind.data.frame(car1m,temp) 
+  }
+
+  
+  rq_mean = rbind(rq_mean,mean(unlist(car1m))/10^6)
+  rq_std = rbind(rq_std,sd(unlist(car1m))/10^6)
+  rq_err = rbind(rq_err,sd(unlist(car1m))/(sqrt(nrow(car1m))*10^6))
+  rq_min = rbind(rq_min,min(car1m)/10^6)
+  rq_max = rbind(rq_max,max(car1m)/10^6)
+
+  data1 = data.frame(x = cut(car1m[,1]/10^6,c(seq(0,5,0.15),Inf)))
+    gg = ggplot(data = data1,aes(x=x)) + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+      labs(x = "Latency (ms)",title = paste0("Distribution of Latency ",nc[j]," cars"))
+    print(gg)
+  }
+
+rq_mean = data.frame(rq_mean)
+rq_std = data.frame(rq_std)
+rq_err = data.frame(rq_err)
+rq_min = data.frame(rq_min)
+rq_max = data.frame(rq_max)
+
+
+```
+
+
+```{r}
+#ActiveMQ
+setwd("C:/Users/Nishant Jain/Documents/Spring 2019/HPBDS/Project/ActiveMQ data/")
+
+d = list.dirs()
+d = d[2:6]
+aq_mean = list()
+aq_std = list()
+aq_err = list()
+aq_min = list()
+aq_max = list()
+for(j in 1:3)
+{
+  
+  car1m = read.csv(paste0(d[1],"/",f[j]),stringsAsFactors = F,header = F,skip = 10000)
+  for(i in 2:5)
+  { 
+    temp = read.csv(paste0(d[i],"/",f[j]),stringsAsFactors = F,header = F,skip = 10000)
+    car1m = rbind.data.frame(car1m,temp) 
+  }
+  
+  
+  aq_mean = rbind(aq_mean,mean(unlist(car1m))/10^6)
+  aq_std = rbind(aq_std,sd(unlist(car1m))/10^6)
+  aq_err = rbind(aq_err,sd(unlist(car1m))/(sqrt(nrow(car1m))*10^6))
+  aq_min = rbind(aq_min,min(car1m)/10^6)
+  aq_max = rbind(aq_max,max(car1m)/10^6)
+  
+  data1 = data.frame(x = cut(car1m[,1]/10^6,c(seq(0,5,0.15),Inf)))
+  gg = ggplot(data = data1,aes(x=x)) + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+    labs(x = "Latency (ms)",title = paste0("Distribution of Latency ",nc[j]," cars"))
+  print(gg)
+  
+  aq_mean = data.frame(aq_mean)
+  aq_std = data.frame(aq_std)
+  aq_err = data.frame(aq_err)
+  aq_min = data.frame(aq_min)
+  aq_max = data.frame(aq_max)
+}
+```
+
+
+
+```{r}
+d = data.frame(x = c(1,8,33)
+               ,y = unlist(aq_mean)
+               ,s = unlist(aq_err))
+qq = ggplot(data = d,aes(x=x,y=y)) + geom_smooth(method = "lm",se = F,aes(fill = "Trend")) + geom_errorbar(aes(x=x, ymin=y- s, ymax=y + s), width=0.5) + geom_line() + labs(x = "No. of Cars", y = "Latency (ms)",title = "ActiveMQ Results") + theme(legend.title = element_blank(),legend.background = element_rect(color = "grey"),plot.title = element_text(hjust = 0.5))  + geom_text(aes(label=round(y,2)),hjust=-0.1, vjust=0)
+print(qq)
+
+```
+
+
+
+```{r}
+d = data.frame(x = c(1,8,33)
+               ,y = unlist(rq_mean)
+               ,s = unlist(rq_err))
+qq1 = ggplot(data = d,aes(x=x,y=y)) + geom_smooth(method = "lm",se = F,aes(fill = "Trend")) + geom_errorbar(aes(x=x, ymin=y- s, ymax=y + s), width=0.5) + geom_line() + labs(x = "No. of Cars", y = "Latency (ms)",title = "RabbitMQ Results") + theme(legend.title = element_blank(),legend.background = element_rect(color = "grey"),plot.title = element_text(hjust = 0.5)) + geom_text(aes(label=round(y,2)),hjust=-0.1, vjust=-.5) 
+print(qq1)
+
+```
+
+
+```{r}
+
+```
+
